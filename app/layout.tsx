@@ -7,7 +7,7 @@ import Footer from "./_components/Footer";
 export const metadata: Metadata = {
   metadataBase: new URL("http://localhost:3000"),
   title: {
-    temlate: "%s | シンプルなコーポレートサイト",
+    template: "%s | シンプルなコーポレートサイト",
     default: "シンプルなコーポレートサイト",
   },
   description:
