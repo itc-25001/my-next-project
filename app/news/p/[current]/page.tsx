@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCategoryDetail, getNewsList } from "@/app/_libs/microcms";
 import NewsList from "@/app/_components/NewsList";
@@ -5,25 +6,30 @@ import Pagination from "@/app/_components/Pagination";
 import { NEWS_LIST_LIMIT } from "@/app/_constants";
 
 type Props = {
-  params: {
+  params: Promise<{
     current: string;
-    id: string;
-  };
+  }>;
 };
 
-export default async function Page({ params }: Props) {
-  const current = parseInt(params.current as string, 10);
+export default function Page({ params }: Props) {
+  return (
+    <Suspense fallback={<p>読み込み中...</p>}>
+      <PagedNews params={params} />
+    </Suspense>
+  );
+}
 
-  if (Number.isNaN(current) || current < 1) {
+async function PagedNews({ params }: Pick<Props, "params">) {
+  const { current } = await params;
+  const currentNum = parseInt(current, 10);
+
+  if (Number.isNaN(currentNum) || currentNum < 1) {
     notFound();
   }
 
-  const category = await getCategoryDetail(params.id).catch(notFound);
-
   const { contents: news, totalCount } = await getNewsList({
-    filters: `category[equals]${category.id}`,
     limit: NEWS_LIST_LIMIT,
-    offset: NEWS_LIST_LIMIT * (current - 1),
+    offset: NEWS_LIST_LIMIT * (currentNum - 1),
   });
 
   if (news.length === 0) {
@@ -33,11 +39,7 @@ export default async function Page({ params }: Props) {
   return (
     <>
       <NewsList news={news} />
-      <Pagination
-        totalCount={totalCount}
-        current={current}
-        basePath={`/news/category/${category.id}`}
-      />
+      <Pagination totalCount={totalCount} current={currentNum} />
     </>
   );
 }
